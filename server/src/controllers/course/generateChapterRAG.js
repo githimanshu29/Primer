@@ -56,6 +56,8 @@ export const generateChapterRAG = async (req, res) => {
       model: modelLabel,
     });
 
+    const userCustomKey = req.user?.apiKeys?.[provider];
+
     const job = await courseQueue.add("generate-chapter", {
       courseId,
       chapterIndex,
@@ -63,6 +65,7 @@ export const generateChapterRAG = async (req, res) => {
       provider,
       model,
       userId: req.user._id.toString(),
+      apiKey: userCustomKey || undefined,
     });
 
     logger.info(

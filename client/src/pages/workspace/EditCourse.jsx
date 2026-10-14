@@ -1,8 +1,12 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useRef } from "react";
+import { useSelector } from "react-redux";
 import { getCourseByIdApi, generateCourseContentApi } from "../../lib/api.js";
 import LiveBuildWindow from "./_components/LiveBuildWindow.jsx";
+import { MODEL_OPTIONS } from "../../lib/models.js";
+import { calculateTotalDuration } from "../../lib/courseUtils.js";
+import { useUserProfile } from "../../lib/useUserProfile.js";
 
 /* ── tiny hook: fade-in on scroll ── */
 const useInView = (threshold = 0.15) => {
@@ -151,7 +155,7 @@ const RoadmapChapterCard = ({ chapter, index, side }) => {
               d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          {chapter.duration}
+          {chapter.duration || "30 mins"}
         </span>
       </div>
       <h3
@@ -270,18 +274,33 @@ const RoadmapTopicItem = ({ topic, index: topicIdx, chapterIndex, side }) => {
 const EditCourse = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [isGenerating, setIsGenerating] = useState(false);
   const [buildLogs, setBuildLogs] = useState([]);
   const [buildNotice, setBuildNotice] = useState("");
-  const MODEL_OPTIONS = {
-    groq: ["llama-3.1-8b-instant", "llama-3.3-70b-versatile"],
-    gemini: ["gemini-2.5-flash-lite", "gemini-2.5-flash"],
-  };
-  const [modelProvider, setModelProvider] = useState("groq");
-  const [modelName, setModelName] = useState(MODEL_OPTIONS.groq[1]);
+  const { defaultProvider, defaultModel } = useSelector((state) => state.ai);
+  const [modelProvider, setModelProvider] = useState(defaultProvider || "gemini");
+  const [modelName, setModelName] = useState(
+    defaultModel || MODEL_OPTIONS[defaultProvider || "gemini"]?.[0] || ""
+  );
 
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
+
+  // Pre-populate with default AI provider & model from Redux (can still be changed)
+  const hasInitializedDefaultsRef = useRef(false);
+
+  useEffect(() => {
+    if (!hasInitializedDefaultsRef.current && defaultProvider) {
+      setModelProvider(defaultProvider);
+      if (defaultModel && MODEL_OPTIONS[defaultProvider]?.includes(defaultModel)) {
+        setModelName(defaultModel);
+      } else {
+        setModelName(MODEL_OPTIONS[defaultProvider]?.[0] || "");
+      }
+      hasInitializedDefaultsRef.current = true;
+    }
+  }, [defaultProvider, defaultModel]);
 
   useEffect(() => {
     const checkMedia = () => {
@@ -323,6 +342,9 @@ const EditCourse = () => {
         ...prev,
         { type: "done", message: "Course generated successfully." },
       ]);
+      await queryClient.invalidateQueries({ queryKey: ["userCourses"] });
+      await queryClient.invalidateQueries({ queryKey: ["previewCourses"] });
+      await queryClient.invalidateQueries({ queryKey: ["course", courseId] });
       navigate("/workspace");
     } catch (err) {
       console.error("Generate content error:", err);
@@ -467,7 +489,7 @@ const EditCourse = () => {
             {[
               {
                 label: "Duration",
-                value: course?.courseJson?.duration || "N/A",
+                value: calculateTotalDuration(course),
                 icon: "⏱",
               },
               { label: "Chapters", value: course?.noOfChapters, icon: "📖" },
@@ -507,6 +529,32 @@ const EditCourse = () => {
           </div>
 
           {/* model selection */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+            <span style={{ color: "#9ca3af", fontSize: "12px", fontWeight: "600" }}>AI Engine</span>
+            {defaultProvider === modelProvider && (
+              <span
+                style={{
+                  fontSize: "10px",
+                  fontWeight: "700",
+                  padding: "2px 8px",
+                  borderRadius: "12px",
+                  background:
+                    modelProvider === "groq"
+                      ? "rgba(249,115,22,0.18)"
+                      : "rgba(124,58,237,0.18)",
+                  color:
+                    modelProvider === "groq" ? "#fb923c" : "#c4b5fd",
+                  border: `1px solid ${
+                    modelProvider === "groq"
+                      ? "rgba(249,115,22,0.35)"
+                      : "rgba(124,58,237,0.35)"
+                  }`,
+                }}
+              >
+                ★ Profile Default
+              </span>
+            )}
+          </div>
           <div
             style={{
               display: "grid",

@@ -134,10 +134,17 @@ export const login = async (req, res) => {
       path: "/",
     });
 
+    const adminEmail = (process.env.ADMIN_EMAIL || "himanshu@gmail.com").toLowerCase().trim();
+    const isAdmin =
+      user.role === "admin" ||
+      (user.email && user.email.toLowerCase().trim() === adminEmail);
+
     const safeUser = {
       id: user._id,
       name: user.name,
       email: user.email,
+      role: isAdmin ? "admin" : (user.role || "user"),
+      isAdmin: Boolean(isAdmin),
     };
 
     res.status(200).json({

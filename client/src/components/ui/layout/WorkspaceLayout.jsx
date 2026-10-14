@@ -2,11 +2,9 @@ import { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar.jsx";
 import CreateCourseDialog from "../../../pages/workspace/_components/CreateCourseDialog.jsx";
-import { useSelector,useDispatch } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { closeCreateCourse } from "../../../store/slices/courseSlice.js";
 import { useQueryClient } from "@tanstack/react-query";
-
-
 
 const WorkspaceLayout = () => {
   const dispatch = useDispatch();
@@ -28,47 +26,75 @@ const WorkspaceLayout = () => {
   }, []);
 
   return (
-    <div style={{
-      display: "flex",
-      minHeight: "100vh",
-      backgroundColor: "#0a0f1e",
-      fontFamily: "'Inter', sans-serif",
-    }}>
+    <div
+      style={{
+        display: "flex",
+        minHeight: "100vh",
+        backgroundColor: "#0a0f1e",
+        fontFamily: "'Inter', sans-serif",
+        zIndex: 1200,
+      }}
+    >
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         isMobile={isMobile}
+        style={{}}
       />
 
-      <div style={{
-        marginLeft: isMobile ? "0" : "240px",
-        flex: 1,
-        padding: isMobile ? "16px" : "32px",
-        minHeight: "100vh",
-        transition: "margin-left 0.3s ease",
-      }}>
+      <div
+        style={{
+          marginLeft: isMobile ? "0" : "240px",
+          flex: 1,
+          padding: isMobile ? "16px" : "32px",
+          minHeight: "100vh",
+          transition: "margin-left 0.3s ease",
+        }}
+      >
         {/* mobile hamburger button */}
         {isMobile && (
-          <button
-            onClick={() => setSidebarOpen(true)}
+          <div
             style={{
-              display: "flex", alignItems: "center", gap: "10px",
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: "10px",
-              padding: "8px 14px",
-              color: "white",
-              cursor: "pointer",
+              position: "sticky",
+              top: "12px",
+              zIndex: 1000,
               marginBottom: "16px",
-              fontSize: "14px",
-              fontWeight: "500",
             }}
           >
-            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-            Menu
-          </button>
+            <button
+              onClick={() => setSidebarOpen(true)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: "10px",
+                padding: "8px 14px",
+                color: "white",
+                cursor: "pointer",
+                marginBottom: "16px",
+                fontSize: "14px",
+                fontWeight: "500",
+              }}
+            >
+              <svg
+                width="20"
+                height="20"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+              Menu
+            </button>
+          </div>
         )}
         <Outlet />
       </div>

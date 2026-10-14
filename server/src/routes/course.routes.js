@@ -24,7 +24,7 @@ router.post(
   aiLimiter,
   generateCourseContent,
 );
-router.get("/user-courses", protect, cacheMiddleware(600), getUserCourses);
+router.get("/user-courses", protect, getUserCourses);
 router.get("/preview", getPreviewCourses);
 
 router.get(

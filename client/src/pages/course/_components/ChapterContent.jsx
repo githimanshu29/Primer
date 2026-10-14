@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useSelector } from "react-redux";
 import { useQuery } from "@tanstack/react-query";
 import {
   generateQuizApi,
@@ -7,6 +8,8 @@ import {
   retakeQuizApi,
 } from "../../../lib/api.js";
 import QuizModal from "./QuizModal.jsx";
+import { MODEL_OPTIONS } from "../../../lib/models.js";
+import { useUserProfile } from "../../../lib/useUserProfile.js";
 
 const ChapterContent = ({
   course,
@@ -17,10 +20,7 @@ const ChapterContent = ({
   const chapter = course?.courseContent?.[activeChapterIndex];
   const chapterLayout = course?.courseJson?.chapters?.[activeChapterIndex];
   const videos = chapter?.youtubeVideo || [];
-  const MODEL_OPTIONS = {
-    groq: ["llama-3.1-8b-instant", "llama-3.3-70b-versatile"],
-    gemini: ["gemini-2.5-flash-lite", "gemini-2.5-flash"],
-  };
+  const { data: profileData } = useUserProfile();
 
   const [isMobile, setIsMobile] = useState(false);
   const [showQuiz, setShowQuiz] = useState(false);
@@ -34,9 +34,25 @@ const ChapterContent = ({
   const [isRetakingFinal, setIsRetakingFinal] = useState(false);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
   const [activeVideo, setActiveVideo] = useState(null);
-  const [quizModelProvider, setQuizModelProvider] = useState("groq");
-  const [quizModelName, setQuizModelName] = useState(MODEL_OPTIONS.groq[1]);
+  const { defaultProvider, defaultModel } = useSelector((state) => state.ai);
+  const [quizModelProvider, setQuizModelProvider] = useState(defaultProvider || "gemini");
+  const [quizModelName, setQuizModelName] = useState(
+    defaultModel || MODEL_OPTIONS[defaultProvider || "gemini"]?.[0] || ""
+  );
   const [quizError, setQuizError] = useState(null);
+  const hasInitializedDefaultsRef = useRef(false);
+
+  useEffect(() => {
+    if (!hasInitializedDefaultsRef.current && defaultProvider) {
+      setQuizModelProvider(defaultProvider);
+      if (defaultModel && MODEL_OPTIONS[defaultProvider]?.includes(defaultModel)) {
+        setQuizModelName(defaultModel);
+      } else {
+        setQuizModelName(MODEL_OPTIONS[defaultProvider]?.[0] || "");
+      }
+      hasInitializedDefaultsRef.current = true;
+    }
+  }, [defaultProvider, defaultModel]);
 
   // ── derived values ────────────────────────────────────────
   const currentChapter = course?.courseJson?.chapters?.[activeChapterIndex];

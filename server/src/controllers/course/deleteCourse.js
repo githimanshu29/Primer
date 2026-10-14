@@ -1,5 +1,7 @@
+import mongoose from "mongoose";
 import Course from "../../models/Course.js";
 import Enrollment from "../../models/Enrollment.js";
+import Quiz from "../../models/Quiz.js";
 import redis from "../../lib/redis.js";
 
 export const deleteCourse = async (req, res) => {
@@ -13,18 +15,64 @@ export const deleteCourse = async (req, res) => {
       });
     }
 
-    // first delete all enrollments for this course
-    await Enrollment.deleteMany({ cid: courseId });
+    const query = {
+      $or: [
+        { cid: courseId },
+        ...(mongoose.isValidObjectId(courseId) ? [{ _id: courseId }] : []),
+      ],
+    };
 
-    // then delete the course itself
-    const deletedCourse = await Course.findOneAndDelete({ cid: courseId });
-
-    if (!deletedCourse) {
+    const course = await Course.findOne(query);
+    if (!course) {
       return res.status(404).json({
         success: false,
         message: "Course not found",
       });
     }
+
+    const adminEmail = (process.env.ADMIN_EMAIL || "himanshu@gmail.com").toLowerCase().trim();
+    const isAdmin =
+      req.user.role === "admin" ||
+      (req.user.email && req.user.email.toLowerCase().trim() === adminEmail);
+
+    // If this is a preview course, ONLY an admin can delete it
+    if (course.previewCourse && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: "Only administrators can delete preview courses",
+      });
+    }
+
+    // For regular courses, check ownership or admin
+    if (
+      !course.previewCourse &&
+      course.createdBy.toString() !== req.user._id.toString() &&
+      !isAdmin
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized. You can only delete your own courses.",
+      });
+    }
+
+    // Delete all enrollments for this course
+    await Enrollment.deleteMany({
+      $or: [
+        { cid: course.cid },
+        ...(mongoose.isValidObjectId(courseId) ? [{ cid: courseId }] : []),
+      ],
+    });
+
+    // Delete all quizzes associated with this course
+    await Quiz.deleteMany({
+      $or: [
+        { courseId: course.cid },
+        ...(mongoose.isValidObjectId(courseId) ? [{ courseId: courseId }] : []),
+      ],
+    });
+
+    // Delete the course itself
+    await Course.findByIdAndDelete(course._id);
 
     try {
       const cacheKeys = await redis.keys("cache:/api/courses*");

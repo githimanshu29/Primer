@@ -1,12 +1,41 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { getUserCoursesApi, getCourseQuizStatusApi } from "../../lib/api.js";
+import {
+  getUserCoursesApi,
+  getCourseQuizStatusApi,
+  deleteQuizApi,
+} from "../../lib/api.js";
 
 const MyQuizzes = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [expandedCourse, setExpandedCourse] = useState(null);
   const [selectedQuiz, setSelectedQuiz] = useState(null);
+  const [deletingQuizId, setDeletingQuizId] = useState(null);
+
+  const handleDeleteQuiz = async (quizId) => {
+    if (!window.confirm("Are you sure you want to delete this quiz attempt?"))
+      return;
+    setDeletingQuizId(quizId);
+    try {
+      await deleteQuizApi(quizId);
+      if (selectedQuiz?._id === quizId) {
+        setSelectedQuiz(null);
+      }
+      queryClient.setQueryData(["quizStatus", expandedCourse], (prev) =>
+        (prev || []).filter((q) => q._id !== quizId),
+      );
+      queryClient.invalidateQueries({
+        queryKey: ["quizStatus", expandedCourse],
+      });
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+    } catch (err) {
+      console.error("Failed to delete quiz:", err);
+    } finally {
+      setDeletingQuizId(null);
+    }
+  };
 
   const { data: courses, isLoading } = useQuery({
     queryKey: ["userCourses"],
@@ -432,6 +461,40 @@ const MyQuizzes = () => {
                               >
                                 {quiz.score}%
                               </span>
+                              <button
+                                type="button"
+                                title="Delete Quiz Attempt"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteQuiz(quiz._id);
+                                }}
+                                disabled={deletingQuizId === quiz._id}
+                                style={{
+                                  width: "26px",
+                                  height: "26px",
+                                  borderRadius: "6px",
+                                  background: "rgba(239,68,68,0.1)",
+                                  border: "1px solid rgba(239,68,68,0.25)",
+                                  color: "#f87171",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  cursor: deletingQuizId === quiz._id ? "not-allowed" : "pointer",
+                                  fontSize: "12px",
+                                  transition: "all 0.15s ease",
+                                  opacity: deletingQuizId === quiz._id ? 0.5 : 1,
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = "rgba(239,68,68,0.2)";
+                                  e.currentTarget.style.borderColor = "rgba(239,68,68,0.4)";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = "rgba(239,68,68,0.1)";
+                                  e.currentTarget.style.borderColor = "rgba(239,68,68,0.25)";
+                                }}
+                              >
+                                {deletingQuizId === quiz._id ? "…" : "🗑️"}
+                              </button>
                               <div style={{
                                 width: "24px", height: "24px", borderRadius: "6px",
                                 background: "rgba(255,255,255,0.05)",

@@ -266,22 +266,27 @@ const ChapterSidebar = ({
                       background: isActiveChapter
                         ? "linear-gradient(135deg, #7c3aed, #6d28d9)"
                         : hasContent
-                          ? "rgba(34,197,94,0.2)"
+                          ? "rgba(124,58,237,0.15)"
                           : "rgba(255,255,255,0.06)",
+                      border: isActiveChapter
+                        ? "1px solid rgba(167,139,250,0.5)"
+                        : hasContent
+                          ? "1px solid rgba(124,58,237,0.3)"
+                          : "1px solid rgba(255,255,255,0.08)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       color: isActiveChapter
                         ? "white"
                         : hasContent
-                          ? "#4ade80"
+                          ? "#c4b5fd"
                           : "#6b7280",
                       fontSize: "11px",
                       fontWeight: "700",
                       flexShrink: 0,
                     }}
                   >
-                    {hasContent && !isActiveChapter ? "✓" : chIndex + 1}
+                    {chIndex + 1}
                   </div>
 
                   {/* chapter name */}

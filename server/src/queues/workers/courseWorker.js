@@ -18,8 +18,15 @@ const connectWorkerDB = async () => {
 };
 
 courseQueue.process("generate-chapter", async (job) => {
-  const { courseId, chapterIndex, userInstruction, userId, provider, model } =
-    job.data;
+  const {
+    courseId,
+    chapterIndex,
+    userInstruction,
+    userId,
+    provider,
+    model,
+    apiKey,
+  } = job.data;
 
   await connectWorkerDB();
 
@@ -67,6 +74,7 @@ courseQueue.process("generate-chapter", async (job) => {
     userInstruction,
     provider,
     model,
+    apiKey,
   });
 
   job.progress(50);

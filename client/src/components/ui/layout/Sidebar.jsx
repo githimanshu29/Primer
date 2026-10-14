@@ -1,7 +1,9 @@
+import { useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { openCreateCourse } from "../../../store/slices/courseSlice.js";
-import { logout } from "../../../store/slices/authSlice.js";
+import { logout, updateUser } from "../../../store/slices/authSlice.js";
+import { useUserProfile } from "../../../lib/useUserProfile.js";
 import axiosInstance from "../../../lib/axios.js";
 
 const navItems = [
@@ -26,8 +28,28 @@ const navItems = [
     ),
   },
   {
-    label: "My Quizzes", // ← changed from "My Learning"
-    path: "/workspace/quizzes", // ← changed from "/workspace/my-learning"
+    label: "Continue Learning",
+    path: "/workspace/continue-learning",
+    icon: (
+      <svg
+        width="18"
+        height="18"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth="2"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+        />
+      </svg>
+    ),
+  },
+  {
+    label: "My Quizzes",
+    path: "/workspace/quizzes",
     icon: (
       <svg
         width="18"
@@ -45,66 +67,9 @@ const navItems = [
       </svg>
     ),
   },
-  {
-    label: "Explore",
-    path: "/workspace/explore",
-    icon: (
-      <svg
-        width="18"
-        height="18"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth="2"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-        />
-      </svg>
-    ),
-  },
-  {
-    label: "AI Tools",
-    path: "/workspace/ai-tools",
-    icon: (
-      <svg
-        width="18"
-        height="18"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth="2"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-        />
-      </svg>
-    ),
-  },
-  {
-    label: "Billing",
-    path: "/workspace/billing",
-    icon: (
-      <svg
-        width="18"
-        height="18"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth="2"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-        />
-      </svg>
-    ),
-  },
+
+
+
   {
     label: "Profile",
     path: "/workspace/profile",
@@ -130,7 +95,16 @@ const navItems = [
 const Sidebar = ({ isOpen, onClose, isMobile }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user } = useSelector((state) => state.auth);
+  const { user: authUser } = useSelector((state) => state.auth);
+  const { data: profileData } = useUserProfile();
+
+  const user = profileData?.user || authUser;
+
+  useEffect(() => {
+    if (profileData?.user) {
+      dispatch(updateUser(profileData.user));
+    }
+  }, [profileData?.user, dispatch]);
 
   const handleLogout = async () => {
     try {
@@ -166,18 +140,20 @@ const Sidebar = ({ isOpen, onClose, isMobile }) => {
       <div
         style={{
           width: "240px",
-          minHeight: "100vh",
+          height: "100vh",
           background: isMobile ? "#0a0f1e" : "rgba(255,255,255,0.02)",
           borderRight: "1px solid rgba(255,255,255,0.06)",
           display: "flex",
           flexDirection: "column",
-          padding: "20px 12px",
+          padding: "24px 14px",
           position: "fixed",
           left: isMobile ? (isOpen ? "0" : "-260px") : 0,
           top: 0,
+          bottom: 0,
           zIndex: 50,
           fontFamily: "'Inter', sans-serif",
           transition: isMobile ? "left 0.3s ease" : "none",
+          boxSizing: "border-box",
         }}
       >
         {/* mobile close button */}
@@ -211,14 +187,15 @@ const Sidebar = ({ isOpen, onClose, isMobile }) => {
             display: "flex",
             alignItems: "center",
             gap: "10px",
-            padding: "0 8px",
+            padding: "0 6px",
             marginBottom: "28px",
+            flexShrink: 0,
           }}
         >
           <div
             style={{
-              width: "34px",
-              height: "34px",
+              width: "32px",
+              height: "32px",
               background: "linear-gradient(135deg, #7c3aed, #6d28d9)",
               borderRadius: "10px",
               display: "flex",
@@ -229,8 +206,8 @@ const Sidebar = ({ isOpen, onClose, isMobile }) => {
             }}
           >
             <svg
-              width="18"
-              height="18"
+              width="17"
+              height="17"
               fill="none"
               viewBox="0 0 24 24"
               stroke="white"
@@ -263,8 +240,8 @@ const Sidebar = ({ isOpen, onClose, isMobile }) => {
           }}
           style={{
             width: "100%",
-            padding: "11px 16px",
-            borderRadius: "12px",
+            padding: "10px 14px",
+            borderRadius: "10px",
             background: "linear-gradient(135deg, #7c3aed, #6d28d9)",
             border: "none",
             color: "white",
@@ -275,22 +252,23 @@ const Sidebar = ({ isOpen, onClose, isMobile }) => {
             alignItems: "center",
             justifyContent: "center",
             gap: "8px",
-            marginBottom: "24px",
+            marginBottom: "20px",
             boxShadow: "0 4px 15px rgba(124,58,237,0.3)",
             transition: "all 0.2s",
+            flexShrink: 0,
           }}
           onMouseEnter={(e) =>
-            (e.currentTarget.style.background =
-              "linear-gradient(135deg, #6d28d9, #5b21b6)")
+          (e.currentTarget.style.background =
+            "linear-gradient(135deg, #6d28d9, #5b21b6)")
           }
           onMouseLeave={(e) =>
-            (e.currentTarget.style.background =
-              "linear-gradient(135deg, #7c3aed, #6d28d9)")
+          (e.currentTarget.style.background =
+            "linear-gradient(135deg, #7c3aed, #6d28d9)")
           }
         >
           <svg
-            width="16"
-            height="16"
+            width="15"
+            height="15"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -305,13 +283,14 @@ const Sidebar = ({ isOpen, onClose, isMobile }) => {
           Create Course
         </button>
 
-        {/* nav items */}
+        {/* navigation items */}
         <nav
           style={{
             display: "flex",
             flexDirection: "column",
-            gap: "2px",
+            gap: "3px",
             flex: 1,
+            overflowY: "auto",
           }}
         >
           {navItems.map((item) => (
@@ -324,7 +303,7 @@ const Sidebar = ({ isOpen, onClose, isMobile }) => {
                 display: "flex",
                 alignItems: "center",
                 gap: "10px",
-                padding: "10px 12px",
+                padding: "9px 12px",
                 borderRadius: "10px",
                 textDecoration: "none",
                 color: isActive ? "white" : "#6b7280",
@@ -355,41 +334,74 @@ const Sidebar = ({ isOpen, onClose, isMobile }) => {
           ))}
         </nav>
 
-        {/* user + logout */}
+        {/* user + logout footer */}
         <div
           style={{
             borderTop: "1px solid rgba(255,255,255,0.06)",
             paddingTop: "16px",
+            marginTop: "auto",
+            flexShrink: 0,
             display: "flex",
             flexDirection: "column",
-            gap: "10px",
+            gap: "12px",
           }}
         >
-          {/* user info */}
+          {/* user info (Clickable to view Profile) */}
           <div
+            onClick={() => {
+              navigate("/workspace/profile");
+              if (isMobile && onClose) onClose();
+            }}
+            title="View Profile"
             style={{
               display: "flex",
               alignItems: "center",
               gap: "10px",
-              padding: "0 4px",
+              padding: "6px 8px",
+              borderRadius: "10px",
+              cursor: "pointer",
+              transition: "background 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
             }}
           >
-            <div
-              style={{
-                width: "34px",
-                height: "34px",
-                borderRadius: "50%",
-                background: "linear-gradient(135deg, #7c3aed, #6d28d9)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "14px",
-                flexShrink: 0,
-              }}
-            >
-              {user?.name?.charAt(0).toUpperCase() || "U"}
-            </div>
-            <div style={{ overflow: "hidden" }}>
+            {user?.avatar ? (
+              <img
+                src={user.avatar}
+                alt={user?.name || "User"}
+                style={{
+                  width: "34px",
+                  height: "34px",
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  flexShrink: 0,
+                  border: "1.5px solid rgba(124,58,237,0.5)",
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: "34px",
+                  height: "34px",
+                  borderRadius: "50%",
+                  background: "linear-gradient(135deg, #7c3aed, #6d28d9)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  color: "white",
+                  flexShrink: 0,
+                }}
+              >
+                {user?.name?.charAt(0).toUpperCase() || "U"}
+              </div>
+            )}
+            <div style={{ overflow: "hidden", flex: 1 }}>
               <p
                 style={{
                   color: "white",
@@ -398,6 +410,7 @@ const Sidebar = ({ isOpen, onClose, isMobile }) => {
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
+                  margin: 0,
                 }}
               >
                 {user?.name || "User"}
@@ -409,6 +422,7 @@ const Sidebar = ({ isOpen, onClose, isMobile }) => {
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
+                  margin: 0,
                 }}
               >
                 {user?.email || ""}
@@ -421,12 +435,12 @@ const Sidebar = ({ isOpen, onClose, isMobile }) => {
             onClick={handleLogout}
             style={{
               width: "100%",
-              padding: "9px 12px",
+              padding: "8px 12px",
               borderRadius: "10px",
               background: "transparent",
               border: "1px solid rgba(239,68,68,0.2)",
               color: "#f87171",
-              fontSize: "13px",
+              fontSize: "12px",
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
@@ -443,8 +457,8 @@ const Sidebar = ({ isOpen, onClose, isMobile }) => {
             }}
           >
             <svg
-              width="16"
-              height="16"
+              width="15"
+              height="15"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -460,7 +474,12 @@ const Sidebar = ({ isOpen, onClose, isMobile }) => {
           </button>
 
           <p
-            style={{ color: "#374151", fontSize: "11px", textAlign: "center" }}
+            style={{
+              color: "#374151",
+              fontSize: "10px",
+              textAlign: "center",
+              margin: 0,
+            }}
           >
             © 2025 Course AI
           </p>

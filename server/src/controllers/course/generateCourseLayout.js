@@ -1,6 +1,5 @@
 import Course from "../../models/Course.js";
-// import ai from "../../lib/groq.js";
-
+import redis from "../../lib/redis.js";
 import { generateWithModel } from "../../lib/groq.js";
 import { jsonrepair } from "jsonrepair";
 import logger from "../../lib/logger.js";
@@ -30,6 +29,7 @@ Schema:
     "level": "string",
     "includeVideo": "boolean",
     "noOfChapters": "number",
+    "duration": "string",
     "bannerImagePrompt": "string",
     "chapters": [
       {
@@ -80,11 +80,15 @@ export const generateCourseLayout = async (req, res) => {
       includeVideo,
     });
 
-    // ── Call selected model ──
+    // ── Call selected model (preferring user's custom API key if saved) ──
+    const provider = modelProvider || "groq";
+    const userCustomKey = req.user?.apiKeys?.[provider];
+
     const rawResp = await generateWithModel({
       prompt: PROMPT + userInput,
-      provider: modelProvider || "groq",
+      provider,
       model: modelName,
+      apiKey: userCustomKey || undefined,
     });
 
     // ── Clean + repair + parse ──
@@ -122,6 +126,14 @@ export const generateCourseLayout = async (req, res) => {
       previewCourse: !!previewCourse,
       createdBy: req.user._id,
     });
+
+    // ── Invalidate Redis course caches so dashboard updates instantly ──
+    try {
+      const cacheKeys = await redis.keys("cache:/api/courses*");
+      if (cacheKeys.length > 0) await redis.del(...cacheKeys);
+    } catch (cacheErr) {
+      logger.warn(`generateCourseLayout cache clear error: ${cacheErr.message}`);
+    }
 
     logger.info(`Course layout generated — cid:${cid}`);
 

@@ -1,4 +1,5 @@
 import Course from "../../models/Course.js";
+import redis from "../../lib/redis.js";
 import { generateWithModel } from "../../lib/groq.js";
 import axios from "axios";
 import { jsonrepair } from "jsonrepair";
@@ -78,13 +79,17 @@ export const generateCourseContent = async (req, res) => {
 
     const chapters = course.courseJson?.chapters || [];
 
+    const selectedProvider = provider || "groq";
+    const userCustomKey = req.user?.apiKeys?.[selectedProvider];
+
     // ── Process all chapters simultaneously ──
     const promises = chapters.map(async (chapter) => {
       // ── Call selected model ──
       const rawResp = await generateWithModel({
         prompt: PROMPT + JSON.stringify(chapter),
-        provider: provider || "groq",
+        provider: selectedProvider,
         model,
+        apiKey: userCustomKey || undefined,
       });
 
       // ── Clean + repair + parse ──
@@ -137,6 +142,14 @@ export const generateCourseContent = async (req, res) => {
     course.chaptersBuilt = chapters.length;
     course.markModified("courseContent");
     await course.save();
+
+    // ── Invalidate Redis course caches so dashboard updates instantly ──
+    try {
+      const cacheKeys = await redis.keys("cache:/api/courses*");
+      if (cacheKeys.length > 0) await redis.del(...cacheKeys);
+    } catch (cacheErr) {
+      logger.warn(`generateCourseContent cache clear error: ${cacheErr.message}`);
+    }
 
     logger.info(`Course content generated — courseId:${courseId}`);
 

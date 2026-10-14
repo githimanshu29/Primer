@@ -12,6 +12,8 @@ import CourseView from "./pages/course/CourseView.jsx";
 import Landing from "./pages/LandingPage.jsx";
 import StepBuildCourse from "./pages/workspace/StepBuilderCourse.jsx";
 import MyQuizzes from "./pages/workspace/MyQuizzes.jsx";
+import ContinueLearning from "./pages/workspace/ContinueLearning.jsx";
+import Profile from "./pages/workspace/Profile.jsx";
 
 const App = () => {
   return (
@@ -24,9 +26,16 @@ const App = () => {
       {/* workspace routes — have sidebar layout */}
       <Route element={<ProtectedRoute />}>
         <Route element={<WorkspaceLayout />}>
-          <Route path="/workspace/quizzes" element={<MyQuizzes />} />
           <Route path="/workspace" element={<Dashboard />} />
-          <Route path="/workspace/my-learning" element={<Dashboard />} />
+          <Route
+            path="/workspace/continue-learning"
+            element={<ContinueLearning />}
+          />
+          <Route
+            path="/workspace/my-learning"
+            element={<ContinueLearning />}
+          />
+          <Route path="/workspace/quizzes" element={<MyQuizzes />} />
           <Route
             path="/workspace/step-build/:courseId"
             element={<StepBuildCourse />}
@@ -35,7 +44,7 @@ const App = () => {
           <Route path="/workspace/explore" element={<Dashboard />} />
           <Route path="/workspace/ai-tools" element={<Dashboard />} />
           <Route path="/workspace/billing" element={<Dashboard />} />
-          <Route path="/workspace/profile" element={<Dashboard />} />
+          <Route path="/workspace/profile" element={<Profile />} />
           <Route
             path="/workspace/edit-course/:courseId"
             element={<EditCourse />}

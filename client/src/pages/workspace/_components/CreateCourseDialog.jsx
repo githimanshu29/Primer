@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { useSelector } from "react-redux";
 import { generateCourseLayoutApi } from "../../../lib/api.js";
 import { v4 as uuidv4 } from "uuid";
+import { MODEL_OPTIONS } from "../../../lib/models.js";
 
 const LEVELS = ["beginner", "moderate", "advanced"];
 const CATEGORIES = [
@@ -15,13 +18,11 @@ const CATEGORIES = [
   "Sports",
   "Other",
 ];
-const MODEL_OPTIONS = {
-  groq: ["llama-3.1-8b-instant", "llama-3.3-70b-versatile"],
-  gemini: ["gemini-2.5-flash-lite", "gemini-2.5-flash"],
-};
-
-const CreateCourseDialog = ({ isOpen, onClose }) => {
+const CreateCourseDialog = ({ isOpen, onClose, onSuccess }) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { defaultProvider, defaultModel } = useSelector((state) => state.ai);
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
@@ -31,11 +32,22 @@ const CreateCourseDialog = ({ isOpen, onClose }) => {
     level: "beginner",
     noOfChapters: "",
     includeVideo: true,
-    modelProvider: "groq",
-    modelName: "llama-3.3-70b-versatile",
+    modelProvider: defaultProvider || "gemini",
+    modelName: defaultModel || "gemini-3.5-flash-lite",
     previewCourse: false,
     previewPassword: "",
   });
+
+  // Automatically pre-populate with user's default provider & model preference from Redux
+  useEffect(() => {
+    if (isOpen) {
+      setFormData((prev) => ({
+        ...prev,
+        modelProvider: defaultProvider,
+        modelName: defaultModel,
+      }));
+    }
+  }, [isOpen, defaultProvider, defaultModel]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -63,6 +75,10 @@ const CreateCourseDialog = ({ isOpen, onClose }) => {
         ...formData,
         noOfChapters: Number(formData.noOfChapters),
       });
+      // Invalidate queries so dashboard reflects newly created layout immediately
+      queryClient.invalidateQueries({ queryKey: ["userCourses"] });
+      queryClient.invalidateQueries({ queryKey: ["previewCourses"] });
+      if (onSuccess) onSuccess();
       onClose();
       navigate(`/workspace/edit-course/${cid}`);
     } catch (err) {
@@ -303,7 +319,32 @@ const CreateCourseDialog = ({ isOpen, onClose }) => {
 
           {/* model selection */}
           <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-            <label style={labelStyle}>Model Provider</label>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <label style={labelStyle}>Model Provider</label>
+              {defaultProvider === formData.modelProvider && (
+                <span
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: "700",
+                    padding: "2px 8px",
+                    borderRadius: "12px",
+                    background:
+                      formData.modelProvider === "groq"
+                        ? "rgba(249,115,22,0.18)"
+                        : "rgba(124,58,237,0.18)",
+                    color:
+                      formData.modelProvider === "groq" ? "#fb923c" : "#c4b5fd",
+                    border: `1px solid ${
+                      formData.modelProvider === "groq"
+                        ? "rgba(249,115,22,0.35)"
+                        : "rgba(124,58,237,0.35)"
+                    }`,
+                  }}
+                >
+                  ★ Default
+                </span>
+              )}
+            </div>
             <div
               style={{
                 display: "grid",

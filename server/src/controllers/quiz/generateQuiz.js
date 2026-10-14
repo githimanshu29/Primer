@@ -85,11 +85,15 @@ Rules:
   ]
 }`;
 
+  const selectedProvider = provider || "groq";
+  const userCustomKey = req.user?.apiKeys?.[selectedProvider];
+
   // ── Call selected model ──
   const rawResp = await generateWithModel({
     prompt,
-    provider: provider || "groq",
+    provider: selectedProvider,
     model,
+    apiKey: userCustomKey || undefined,
   });
 
   // ── Clean + repair + parse ──

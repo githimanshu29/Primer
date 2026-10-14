@@ -11,6 +11,7 @@ import authRoutes from "./src/routes/auth.route.js";
 import courseRoutes from "./src/routes/course.routes.js";
 import enrollmentRoutes from "./src/routes/enrollment.routes.js";
 import quizRoutes from "./src/routes/quiz.routes.js";
+import userRoutes from "./src/routes/user.route.js";
 import errorHandler from "./src/middleware/errorHandler.js";
 import requestLogger from "./src/middleware/requestLogger.js";
 import logger from "./src/lib/logger.js";
@@ -25,7 +26,7 @@ app.set("trust proxy", 1);
 app.use(
   cors({
     origin: (origin, callback) => {
-      const allowed = [process.env.CLIENT_URL, "http://localhost:5173"].filter(
+      const allowed = [process.env.CLIENT_URL, "http://localhost:5174"].filter(
         Boolean,
       );
       if (!origin || allowed.includes(origin)) {
@@ -48,6 +49,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/enrollments", enrollmentRoutes);
 app.use("/api/quiz", quizRoutes);
+app.use("/api/user", userRoutes);
 
 app.use(errorHandler);
 

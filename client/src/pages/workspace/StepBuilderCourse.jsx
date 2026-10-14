@@ -1,32 +1,40 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSelector } from "react-redux";
 import {
   getCourseByIdApi,
   enrollCourseApi,
   createChapterRAGStream,
 } from "../../lib/api.js";
 import LiveBuildWindow from "./_components/LiveBuildWindow.jsx";
+import { MODEL_OPTIONS } from "../../lib/models.js";
 
 const StepBuildCourse = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-
-  const MODEL_OPTIONS = {
-    groq: ["llama-3.1-8b-instant", "llama-3.3-70b-versatile"],
-    gemini: ["gemini-2.5-flash-lite", "gemini-2.5-flash"],
-  };
+  const { defaultProvider, defaultModel } = useSelector((state) => state.ai);
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [logs, setLogs] = useState([]);
   const [embeddingProgress, setEmbeddingProgress] = useState(null);
   const [userInstruction, setUserInstruction] = useState("");
   const [eventSource, setEventSource] = useState(null);
-  const [modelProvider, setModelProvider] = useState("groq");
-  const [modelName, setModelName] = useState(MODEL_OPTIONS.groq[1]);
+  const [modelProvider, setModelProvider] = useState(defaultProvider || "gemini");
+  const [modelName, setModelName] = useState(defaultModel || "gemini-3.5-flash-lite");
   const generationCompletedRef = useRef(false);
   const [buildNotice, setBuildNotice] = useState("");
+  const hasInitializedDefaultsRef = useRef(false);
+
+  // Pre-populate with user's default AI provider & model preference from Redux
+  useEffect(() => {
+    if (!hasInitializedDefaultsRef.current && defaultProvider) {
+      setModelProvider(defaultProvider);
+      setModelName(defaultModel);
+      hasInitializedDefaultsRef.current = true;
+    }
+  }, [defaultProvider, defaultModel]);
 
   const {
     data: course,
@@ -518,17 +526,42 @@ const StepBuildCourse = () => {
       ) : (
         <>
           <div style={{ marginBottom: "12px" }}>
-            <label
-              style={{
-                color: "#9ca3af",
-                fontSize: "12px",
-                fontWeight: "500",
-                display: "block",
-                marginBottom: "6px",
-              }}
-            >
-              Model provider
-            </label>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+              <label
+                style={{
+                  color: "#9ca3af",
+                  fontSize: "12px",
+                  fontWeight: "500",
+                  display: "block",
+                  margin: 0,
+                }}
+              >
+                Model provider
+              </label>
+              {defaultProvider === modelProvider && (
+                <span
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: "700",
+                    padding: "2px 8px",
+                    borderRadius: "12px",
+                    background:
+                      modelProvider === "groq"
+                        ? "rgba(249,115,22,0.18)"
+                        : "rgba(124,58,237,0.18)",
+                    color:
+                      modelProvider === "groq" ? "#fb923c" : "#c4b5fd",
+                    border: `1px solid ${
+                      modelProvider === "groq"
+                        ? "rgba(249,115,22,0.35)"
+                        : "rgba(124,58,237,0.35)"
+                    }`,
+                  }}
+                >
+                  ★ Profile Default
+                </span>
+              )}
+            </div>
             <div
               style={{
                 display: "grid",

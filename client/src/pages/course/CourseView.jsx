@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { getCourseByIdApi, getEnrolledCourseByIdApi } from "../../lib/api.js";
 import axiosInstance from "../../lib/axios.js";
@@ -8,6 +9,7 @@ import ChapterContent from "./_components/ChapterContent.jsx";
 
 import { generateQuizApi } from "../../lib/api.js";
 import QuizModal from "./_components/QuizModal.jsx";
+import { MODEL_OPTIONS } from "../../lib/models.js";
 
 const CourseView = () => {
   const { courseId } = useParams();
@@ -88,13 +90,23 @@ const CourseView = () => {
   const [showFinalQuiz, setShowFinalQuiz] = useState(false);
   const [finalQuizData, setFinalQuizData] = useState(null);
   const [isLoadingFinalQuiz, setIsLoadingFinalQuiz] = useState(false);
-  const MODEL_OPTIONS = {
-    groq: ["llama-3.1-8b-instant", "llama-3.3-70b-versatile"],
-    gemini: ["gemini-2.5-flash-lite", "gemini-2.5-flash"],
-  };
-  const [quizModelProvider, setQuizModelProvider] = useState("groq");
-  const [quizModelName, setQuizModelName] = useState(MODEL_OPTIONS.groq[1]);
+  const { defaultProvider, defaultModel } = useSelector((state) => state.ai);
+  const [quizModelProvider, setQuizModelProvider] = useState(defaultProvider || "gemini");
+  const [quizModelName, setQuizModelName] = useState(
+    defaultModel || MODEL_OPTIONS[defaultProvider || "gemini"]?.[0] || ""
+  );
   const [quizError, setQuizError] = useState(null);
+
+  useEffect(() => {
+    if (defaultProvider) {
+      setQuizModelProvider(defaultProvider);
+      if (defaultModel && MODEL_OPTIONS[defaultProvider]?.includes(defaultModel)) {
+        setQuizModelName(defaultModel);
+      } else {
+        setQuizModelName(MODEL_OPTIONS[defaultProvider]?.[0] || "");
+      }
+    }
+  }, [defaultProvider, defaultModel]);
 
   const isFullyComplete = course?.status === "READY";
 
@@ -364,7 +376,7 @@ const CourseView = () => {
                 onChange={(e) => {
                   const nextProvider = e.target.value;
                   setQuizModelProvider(nextProvider);
-                  setQuizModelName(MODEL_OPTIONS[nextProvider][0]);
+                  setQuizModelName(MODEL_OPTIONS[nextProvider]?.[0] || "");
                 }}
                 disabled={isLoadingFinalQuiz}
                 style={{
@@ -396,7 +408,7 @@ const CourseView = () => {
                   animation: "attentionGlow 2.4s ease-in-out infinite",
                 }}
               >
-                {MODEL_OPTIONS[quizModelProvider].map((model) => (
+                {MODEL_OPTIONS[quizModelProvider]?.map((model) => (
                   <option key={model} value={model}>
                     {model}
                   </option>

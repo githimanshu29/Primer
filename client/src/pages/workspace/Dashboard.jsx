@@ -4,16 +4,14 @@ import { useNavigate, useLocation } from "react-router-dom";
 import {
   getUserCoursesApi,
   getPreviewCoursesApi,
-  getEnrolledCoursesApi,
   deleteCourseApi,
   enrollCourseApi,
-  deleteEnrollmentApi,
 } from "../../lib/api.js";
 import WelcomeBanner from "./_components/WelcomeBanner.jsx";
 import CourseCard from "./_components/CourseCard.jsx";
-import EnrolledCourseCard from "./_components/EnrolledCourseCard.jsx";
 import SkeletonCard from "./_components/SkeletonCard.jsx";
 import CreateCourseDialog from "./_components/CreateCourseDialog.jsx";
+import { useUserProfile } from "../../lib/useUserProfile.js";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -22,7 +20,10 @@ const Dashboard = () => {
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  // ── fetch user courses ────────────────────────────────────────────────────
+  const { data: profileData } = useUserProfile();
+  const isAdmin = Boolean(profileData?.user?.isAdmin);
+
+  // ── fetch user courses (always fresh) ───────────────────────────────────
   const {
     data: coursesData,
     isLoading: coursesLoading,
@@ -33,28 +34,19 @@ const Dashboard = () => {
       const res = await getUserCoursesApi();
       return res.data.courses;
     },
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
-  // ── fetch enrolled courses ────────────────────────────────────────────────
-  const {
-    data: enrolledData,
-    isLoading: enrolledLoading,
-    refetch: refetchEnrolled,
-  } = useQuery({
-    queryKey: ["enrolledCourses"],
-    queryFn: async () => {
-      const res = await getEnrolledCoursesApi();
-      return res.data.courses;
-    },
-  });
-
-  // ── fetch preview courses (public) ─────────────────────────────────────
-  const { data: previewData } = useQuery({
+  // ── fetch preview courses (always fresh) ────────────────────────────────
+  const { data: previewData, isLoading: previewLoading } = useQuery({
     queryKey: ["previewCourses"],
     queryFn: async () => {
       const res = await getPreviewCoursesApi();
       return res.data.courses;
     },
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   useEffect(() => {
@@ -63,10 +55,40 @@ const Dashboard = () => {
     }
   }, [location]);
 
-  // ── handlers ──────────────────────────────────────────────────────────────
-  const handleDeleteCourse = async (courseId) => {
+  // ── Strictly separate Preview Courses vs My Regular Courses ─────────────
+  const previewCourses = (previewData || []).filter(
+    (c) => c.previewCourse === true || c.previewCourse === "true",
+  );
+  const myCourses = (coursesData || []).filter(
+    (c) =>
+      !c.previewCourse ||
+      c.previewCourse === false ||
+      c.previewCourse === "false",
+  );
+
+  // ── handlers ────────────────────────────────────────────────────────────
+  const handleDeleteCourse = async (courseId, isPreview = false) => {
+    if (isPreview) {
+      // Optimistic delete for Preview Course in UI
+      queryClient.setQueryData(["previewCourses"], (prev) =>
+        (prev || []).filter(
+          (course) => course.cid !== courseId && course._id !== courseId,
+        ),
+      );
+      try {
+        await deleteCourseApi(courseId);
+        queryClient.invalidateQueries({ queryKey: ["previewCourses"] });
+      } catch (err) {
+        console.error("Delete preview course error:", err);
+        queryClient.invalidateQueries({ queryKey: ["previewCourses"] });
+      }
+      return;
+    }
+
     queryClient.setQueryData(["userCourses"], (prev) =>
-      (prev || []).filter((course) => course.cid !== courseId),
+      (prev || []).filter(
+        (course) => course.cid !== courseId && course._id !== courseId,
+      ),
     );
     try {
       await deleteCourseApi(courseId);
@@ -80,7 +102,7 @@ const Dashboard = () => {
   const handleEnroll = async (courseId) => {
     try {
       await enrollCourseApi(courseId);
-      refetchEnrolled();
+      queryClient.invalidateQueries({ queryKey: ["enrolledCourses"] });
       refetchCourses();
     } catch (err) {
       console.error("Enroll error:", err);
@@ -89,15 +111,6 @@ const Dashboard = () => {
 
   const handleGenerateContent = (courseId) => {
     navigate(`/workspace/edit-course/${courseId}`);
-  };
-
-  const handleDeleteEnrollment = async (enrollmentId) => {
-    try {
-      await deleteEnrollmentApi(enrollmentId);
-      refetchEnrolled();
-    } catch (err) {
-      console.error("Delete enrollment error:", err);
-    }
   };
 
   const handleContinueBuilding = (courseId) => {
@@ -109,17 +122,32 @@ const Dashboard = () => {
       {/* welcome banner */}
       <WelcomeBanner />
 
-      {/* ── Preview Courses section ── */}
-      {previewData?.length > 0 && (
+      {/* ── 1. Preview Courses section (Strictly preview courses only) ── */}
+      {(previewLoading || previewCourses.length > 0) && (
         <div ref={previewRef} style={{ marginBottom: "40px" }}>
           <div style={{ marginBottom: "16px" }}>
-            <h2
-              style={{ color: "#fbbf24", fontSize: "20px", fontWeight: "700" }}
-            >
-              Preview Courses
-            </h2>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <h2
+                style={{ color: "#fbbf24", fontSize: "20px", fontWeight: "700" }}
+              >
+                Preview Courses
+              </h2>
+              <span
+                style={{
+                  fontSize: "11px",
+                  padding: "2px 8px",
+                  borderRadius: "20px",
+                  background: "rgba(251,191,36,0.12)",
+                  color: "#fbbf24",
+                  border: "1px solid rgba(251,191,36,0.25)",
+                  fontWeight: "600",
+                }}
+              >
+                Public Demos
+              </span>
+            </div>
             <p style={{ color: "#9ca3af", fontSize: "13px", marginTop: "4px" }}>
-              API credit gone? Use these preview courses.
+              API credit exhausted? Explore pre-generated preview courses or manage them below.
             </p>
           </div>
 
@@ -130,53 +158,24 @@ const Dashboard = () => {
               gap: "16px",
             }}
           >
-            {previewData?.map((course, i) => (
-              <CourseCard
-                key={`preview-${i}`}
-                course={course}
-                onDelete={handleDeleteCourse}
-                onEnroll={handleEnroll}
-                onGenerateContent={handleGenerateContent}
-                onContinueBuilding={handleContinueBuilding}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ── Continue Learning section ── */}
-      {(enrolledLoading || enrolledData?.length > 0) && (
-        <div style={{ marginBottom: "40px" }}>
-          <div style={{ marginBottom: "16px" }}>
-            <h2 style={{ color: "white", fontSize: "20px", fontWeight: "700" }}>
-              Continue Learning
-            </h2>
-            <p style={{ color: "#6b7280", fontSize: "13px", marginTop: "4px" }}>
-              Pick up where you left off
-            </p>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-              gap: "16px",
-            }}
-          >
-            {enrolledLoading
+            {previewLoading
               ? [...Array(3)].map((_, i) => <SkeletonCard key={i} />)
-              : enrolledData?.map((item, i) => (
-                  <EnrolledCourseCard
-                    key={i}
-                    item={item}
-                    onDelete={handleDeleteEnrollment}
+              : previewCourses.map((course, i) => (
+                  <CourseCard
+                    key={`preview-${course.cid || course._id || i}`}
+                    course={course}
+                    onDelete={handleDeleteCourse}
+                    onEnroll={handleEnroll}
+                    onGenerateContent={handleGenerateContent}
+                    onContinueBuilding={handleContinueBuilding}
+                    isAdmin={isAdmin}
                   />
                 ))}
           </div>
         </div>
       )}
 
-      {/* ── My Courses section ── */}
+      {/* ── 2. My Courses section (Strictly non-preview courses) ── */}
       <div>
         {/* section header */}
         <div
@@ -251,7 +250,7 @@ const Dashboard = () => {
         )}
 
         {/* empty state */}
-        {!coursesLoading && coursesData?.length === 0 && (
+        {!coursesLoading && myCourses.length === 0 && (
           <div
             style={{
               textAlign: "center",
@@ -299,8 +298,8 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* courses grid */}
-        {!coursesLoading && coursesData?.length > 0 && (
+        {/* courses grid — only non-preview courses */}
+        {!coursesLoading && myCourses.length > 0 && (
           <div
             style={{
               display: "grid",
@@ -308,14 +307,15 @@ const Dashboard = () => {
               gap: "16px",
             }}
           >
-            {coursesData?.map((course, i) => (
+            {myCourses.map((course, i) => (
               <CourseCard
-                key={i}
+                key={course.cid || course._id || i}
                 course={course}
                 onDelete={handleDeleteCourse}
                 onEnroll={handleEnroll}
                 onGenerateContent={handleGenerateContent}
                 onContinueBuilding={handleContinueBuilding}
+                isAdmin={isAdmin}
               />
             ))}
           </div>

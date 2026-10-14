@@ -28,11 +28,13 @@ export const getCourseById = async (req, res) => {
   }
 };
 
-// sare courses k lie
+// User regular courses (strictly excluding preview courses)
 export const getUserCourses = async (req, res) => {
   try {
-    //
-    const courses = await Course.find({ createdBy: req.user._id }).sort({
+    const courses = await Course.find({
+      createdBy: req.user._id,
+      previewCourse: { $nin: [true, "true"] },
+    }).sort({
       createdAt: -1, // latest first
     });
 
@@ -53,10 +55,12 @@ export const getUserCourses = async (req, res) => {
   }
 };
 
-// public preview courses
+// Public preview courses (strictly preview courses only)
 export const getPreviewCourses = async (req, res) => {
   try {
-    const courses = await Course.find({ previewCourse: true }).sort({
+    const courses = await Course.find({
+      previewCourse: { $in: [true, "true"] },
+    }).sort({
       createdAt: -1,
     });
 

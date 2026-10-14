@@ -12,6 +12,21 @@ export const enrollCourse = async (req, res) => {
       });
     }
 
+    // check if course is a preview course — preview courses cannot be enrolled
+    const course = await Course.findOne({
+      $or: [
+        { cid: courseId },
+        ...(courseId.match(/^[0-9a-fA-F]{24}$/) ? [{ _id: courseId }] : []),
+      ],
+    });
+
+    if (course && course.previewCourse) {
+      return res.status(400).json({
+        success: false,
+        message: "Preview courses cannot be enrolled. You can explore them directly.",
+      });
+    }
+
     // check if already enrolled
     const existingEnrollment = await Enrollment.findOne({
       cid: courseId,

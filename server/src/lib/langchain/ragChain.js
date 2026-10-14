@@ -12,24 +12,36 @@ import logger from "../logger.js";
 const GROQ_MODELS = new Set([
   "llama-3.1-8b-instant",
   "llama-3.3-70b-versatile",
+  "deepseek-r1-distill-llama-70b",
+  "mixtral-8x7b-32768",
+  "gemma2-9b-it",
 ]);
 
-const GEMINI_MODELS = new Set(["gemini-2.5-flash-lite", "gemini-2.5-flash"]);
+const GEMINI_MODELS = new Set([
+  "gemini-3.8-flash",
+  "gemini-3.7-flash",
+  "gemini-3.6-flash",
+  "gemini-3.5-flash",
+  "gemini-3-flash-preview",
+  "gemini-2.5-flash",
+  "gemini-3.5-flash-lite",
+  "gemini-3.1-flash-lite",
+]);
 
 const resolveModel = (provider, model) => {
   if (provider === "gemini") {
-    return GEMINI_MODELS.has(model) ? model : "gemini-2.5-flash-lite";
+    return GEMINI_MODELS.has(model) ? model : "gemini-3.5-flash-lite";
   }
 
   return GROQ_MODELS.has(model) ? model : "llama-3.3-70b-versatile";
 };
 
-const getLLM = ({ provider = "groq", model = "" } = {}) => {
+const getLLM = ({ provider = "groq", model = "", apiKey = "" } = {}) => {
   const resolvedModel = resolveModel(provider, model);
 
   if (provider === "gemini") {
     return new ChatGoogleGenerativeAI({
-      apiKey: process.env.GEMINI_API_KEY,
+      apiKey: apiKey || process.env.GEMINI_API_KEY,
       model: resolvedModel,
       temperature: 0.7,
       maxOutputTokens: 8192,
@@ -37,7 +49,7 @@ const getLLM = ({ provider = "groq", model = "" } = {}) => {
   }
 
   return new ChatGroq({
-    apiKey: process.env.GROQ_API_KEY,
+    apiKey: apiKey || process.env.GROQ_API_KEY,
     model: resolvedModel,
     temperature: 0.7,
     maxTokens: 8192,
@@ -187,8 +199,9 @@ export const generateChapterWithRAG = async ({
   userInstruction,
   provider,
   model,
+  apiKey,
 }) => {
-  const chain = buildRagChain({ provider, model });
+  const chain = buildRagChain({ provider, model, apiKey });
 
   logger.info(
     `RAG chain running for chapter ${chapterNumber}: "${chapterName}"`,

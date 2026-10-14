@@ -124,9 +124,13 @@
 // export default WelcomeBanner;
 
 import { useSelector } from "react-redux";
+import { useUserProfile } from "../../../lib/useUserProfile.js";
 
 const WelcomeBanner = () => {
-  const { user } = useSelector((state) => state.auth);
+  const { user: authUser } = useSelector((state) => state.auth);
+  const { data: profileData } = useUserProfile();
+  const user = profileData?.user || authUser;
+  const firstName = user?.name ? user.name.split(" ")[0] : "Learner";
 
   return (
     <div
@@ -254,7 +258,7 @@ const WelcomeBanner = () => {
         }}
       >
         Welcome back,{" "}
-        <span style={{ color: "#a78bfa" }}>{user?.name?.split(" ")[0]}!</span>{" "}
+        <span style={{ color: "#a78bfa" }}>{firstName}!</span>{" "}
         👋
       </h1>
       <p style={{ color: "#6b7280", fontSize: "14px" }}>

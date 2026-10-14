@@ -1,4 +1,4 @@
-// import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const CourseCard = ({
   course,
@@ -6,11 +6,13 @@ const CourseCard = ({
   onEnroll,
   onGenerateContent,
   onContinueBuilding,
+  isAdmin = false,
 }) => {
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
   const isReady = course.status === "READY";
   const isBuilding = course.status === "BUILDING";
-  const isPreview = course.previewCourse;
+  const isPreview = Boolean(course.previewCourse);
+  const courseIdentifier = course.cid || course._id;
 
   return (
     <div
@@ -224,32 +226,117 @@ const CourseCard = ({
 
       {/* action buttons — always pinned at bottom */}
       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        {isReady ? (
-          <button
-            onClick={() => onEnroll(course.cid)}
-            style={{
-              width: "100%",
-              padding: "10px",
-              borderRadius: "10px",
-              background: "linear-gradient(135deg, #7c3aed, #6d28d9)",
-              border: "none",
-              color: "white",
-              fontSize: "13px",
-              fontWeight: "600",
-              cursor: "pointer",
-              transition: "all 0.2s",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
-            onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-          >
-            ⊕ Enroll
-          </button>
-        ) : isBuilding ? (
+        {isPreview ? (
           <>
-            {/* enroll if at least 1 chapter built */}
-            {(course.chaptersBuilt || 0) > 0 && (
+            {/* ── 1. PREVIEW COURSE: Explore Course (No enroll allowed) ── */}
+            <button
+              onClick={() => navigate(`/workspace/view-course/${courseIdentifier}`)}
+              style={{
+                width: "100%",
+                padding: "10px",
+                borderRadius: "10px",
+                background: "linear-gradient(135deg, #f59e0b, #d97706)",
+                border: "none",
+                color: "white",
+                fontSize: "13px",
+                fontWeight: "600",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
+                boxShadow: "0 4px 14px rgba(245,158,11,0.3)",
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+            >
+              👁 Explore Course
+            </button>
+
+            {/* Continue building preview course: ADMIN ONLY */}
+            {isAdmin && (
               <button
-                onClick={() => onEnroll(course.cid)}
+                onClick={() => onContinueBuilding(courseIdentifier)}
+                style={{
+                  width: "100%",
+                  padding: "9px",
+                  borderRadius: "10px",
+                  background: "rgba(251,146,60,0.14)",
+                  border: "1px solid rgba(251,146,60,0.35)",
+                  color: "#fdba74",
+                  fontSize: "12px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "6px",
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = "rgba(251,146,60,0.24)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = "rgba(251,146,60,0.14)")
+                }
+              >
+                ⚡ Continue Building (Admin)
+              </button>
+            )}
+
+            {/* Delete preview course: ADMIN ONLY */}
+            {isAdmin && (
+              <button
+                onClick={() => onDelete(courseIdentifier, true)}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  background: "rgba(239,68,68,0.06)",
+                  border: "1px solid rgba(239,68,68,0.25)",
+                  borderRadius: "8px",
+                  color: "#f87171",
+                  fontSize: "12px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "6px",
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(239,68,68,0.14)";
+                  e.currentTarget.style.borderColor = "rgba(248,113,113,0.5)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(239,68,68,0.06)";
+                  e.currentTarget.style.borderColor = "rgba(239,68,68,0.25)";
+                }}
+              >
+                <svg
+                  width="13"
+                  height="13"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+                Delete Preview Course (Admin)
+              </button>
+            )}
+          </>
+        ) : (
+          <>
+            {/* ── 2. MY COURSES: Regular enroll & building buttons ── */}
+            {isReady ? (
+              <button
+                onClick={() => onEnroll(courseIdentifier)}
                 style={{
                   width: "100%",
                   padding: "10px",
@@ -265,95 +352,119 @@ const CourseCard = ({
                 onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
                 onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
               >
-                ⊕ Enroll & Study So Far
+                ⊕ Enroll
+              </button>
+            ) : isBuilding ? (
+              <>
+                {(course.chaptersBuilt || 0) > 0 && (
+                  <button
+                    onClick={() => onEnroll(courseIdentifier)}
+                    style={{
+                      width: "100%",
+                      padding: "10px",
+                      borderRadius: "10px",
+                      background: "linear-gradient(135deg, #7c3aed, #6d28d9)",
+                      border: "none",
+                      color: "white",
+                      fontSize: "13px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
+                    onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+                  >
+                    ⊕ Enroll & Study So Far
+                  </button>
+                )}
+                <button
+                  onClick={() => onContinueBuilding(courseIdentifier)}
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "10px",
+                    background: "rgba(124,58,237,0.15)",
+                    border: "1px solid rgba(124,58,237,0.4)",
+                    color: "#a78bfa",
+                    fontSize: "13px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background = "rgba(124,58,237,0.25)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background = "rgba(124,58,237,0.15)")
+                  }
+                >
+                  ⚡ Continue Building
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => onGenerateContent(courseIdentifier)}
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  borderRadius: "10px",
+                  background: "rgba(124,58,237,0.15)",
+                  border: "1px solid rgba(124,58,237,0.3)",
+                  color: "#a78bfa",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = "rgba(124,58,237,0.25)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = "rgba(124,58,237,0.15)")
+                }
+              >
+                ⚙ Generate Content
               </button>
             )}
+
+            {/* Always available to delete your own course in My Courses */}
             <button
-              onClick={() => onContinueBuilding(course.cid)}
+              onClick={() => onDelete(courseIdentifier, false)}
               style={{
                 width: "100%",
-                padding: "10px",
-                borderRadius: "10px",
-                background: "rgba(124,58,237,0.15)",
-                border: "1px solid rgba(124,58,237,0.4)",
-                color: "#a78bfa",
-                fontSize: "13px",
-                fontWeight: "600",
+                padding: "8px",
+                background: "transparent",
+                border: "none",
+                borderRadius: "0",
+                color: "#6b7280",
+                fontSize: "12px",
                 cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
                 transition: "all 0.2s",
               }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.background = "rgba(124,58,237,0.25)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.background = "rgba(124,58,237,0.15)")
-              }
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#f87171")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "#6b7280")}
             >
-              ⚡ Continue Building
+              <svg
+                width="13"
+                height="13"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+              Delete Course
             </button>
           </>
-        ) : (
-          <button
-            onClick={() => onGenerateContent(course.cid)}
-            style={{
-              width: "100%",
-              padding: "10px",
-              borderRadius: "10px",
-              background: "rgba(124,58,237,0.15)",
-              border: "1px solid rgba(124,58,237,0.3)",
-              color: "#a78bfa",
-              fontSize: "13px",
-              fontWeight: "600",
-              cursor: "pointer",
-              transition: "all 0.2s",
-            }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.background = "rgba(124,58,237,0.25)")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.background = "rgba(124,58,237,0.15)")
-            }
-          >
-            ⚙ Generate Content
-          </button>
-        )}
-
-        {!isPreview && (
-          <button
-            onClick={() => onDelete(course.cid)}
-            style={{
-              width: "100%",
-              padding: "8px",
-              background: "transparent",
-              border: "none",
-              color: "#6b7280",
-              fontSize: "12px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "6px",
-              transition: "color 0.2s",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "#f87171")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "#6b7280")}
-          >
-            <svg
-              width="13"
-              height="13"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              />
-            </svg>
-            Delete Course
-          </button>
         )}
       </div>
     </div>

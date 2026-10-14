@@ -49,6 +49,9 @@ export const retakeQuizApi = (quizId) =>
 export const getCourseQuizStatusApi = (courseId) =>
   axiosInstance.get(`/quiz/status/${courseId}`);
 
+export const deleteQuizApi = (quizId) =>
+  axiosInstance.delete(`/quiz/${quizId}`);
+
 export const getAccessToken = () => localStorage.getItem("accessToken");
 
 // SSE connection — returns EventSource object
@@ -76,3 +79,16 @@ export const createChapterRAGStream = async (
   const url = `${import.meta.env.VITE_API_URL || "http://localhost:5005/api"}/courses/generate-chapter-rag/${courseId}?token=${token}&userInstruction=${encodeURIComponent(userInstruction)}&provider=${encodeURIComponent(modelProvider)}&model=${encodeURIComponent(modelName)}`;
   return new EventSource(url);
 };
+
+// ── USER PROFILE & API KEYS ──────────────────────────────────
+export const getUserProfileApi = () => axiosInstance.get("/user/profile");
+export const updateUserProfileApi = (data) =>
+  axiosInstance.put("/user/profile", data);
+export const updateApiKeysApi = (data) =>
+  axiosInstance.put("/user/api-keys", data);
+export const testApiKeyApi = (data) =>
+  axiosInstance.post("/user/test-api-key", data);
+export const uploadAvatarApi = (imageData) =>
+  axiosInstance.post("/user/upload-avatar", { image: imageData });
+
+
