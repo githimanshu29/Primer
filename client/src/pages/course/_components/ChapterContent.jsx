@@ -8,6 +8,8 @@ import {
   retakeQuizApi,
 } from "../../../lib/api.js";
 import QuizModal from "./QuizModal.jsx";
+import TopicDiagramPanel from "./TopicDiagramPanel.jsx";
+import TopicConversationPanel from "./TopicConversationPanel.jsx";
 import { MODEL_OPTIONS } from "../../../lib/models.js";
 import { useUserProfile } from "../../../lib/useUserProfile.js";
 
@@ -34,6 +36,15 @@ const ChapterContent = ({
   const [isRetakingFinal, setIsRetakingFinal] = useState(false);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
   const [activeVideo, setActiveVideo] = useState(null);
+  const [openChatTopics, setOpenChatTopics] = useState({});
+
+  const toggleChatTopic = (key) => {
+    setOpenChatTopics((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
   const { defaultProvider, defaultModel } = useSelector((state) => state.ai);
   const [quizModelProvider, setQuizModelProvider] = useState(defaultProvider || "gemini");
   const [quizModelName, setQuizModelName] = useState(
@@ -634,14 +645,19 @@ const ChapterContent = ({
 
                 {/* AI Assistant button */}
                 <button
+                  onClick={() => toggleChatTopic(`${activeChapterIndex}-${tIndex}`)}
                   style={{
                     display: "flex",
                     alignItems: "center",
                     gap: "6px",
                     padding: "7px 12px",
                     borderRadius: "8px",
-                    background: "rgba(124,58,237,0.1)",
-                    border: "1px solid rgba(124,58,237,0.2)",
+                    background: openChatTopics[`${activeChapterIndex}-${tIndex}`]
+                      ? "rgba(124,58,237,0.25)"
+                      : "rgba(124,58,237,0.1)",
+                    border: openChatTopics[`${activeChapterIndex}-${tIndex}`]
+                      ? "1px solid rgba(124,58,237,0.45)"
+                      : "1px solid rgba(124,58,237,0.2)",
                     color: "#a78bfa",
                     fontSize: "12px",
                     cursor: "pointer",
@@ -649,10 +665,12 @@ const ChapterContent = ({
                     flexShrink: 0,
                   }}
                   onMouseEnter={(e) =>
-                    (e.currentTarget.style.background = "rgba(124,58,237,0.2)")
+                    (e.currentTarget.style.background = "rgba(124,58,237,0.25)")
                   }
                   onMouseLeave={(e) =>
-                    (e.currentTarget.style.background = "rgba(124,58,237,0.1)")
+                    (e.currentTarget.style.background = openChatTopics[`${activeChapterIndex}-${tIndex}`]
+                      ? "rgba(124,58,237,0.25)"
+                      : "rgba(124,58,237,0.1)")
                   }
                 >
                   <svg
@@ -669,14 +687,33 @@ const ChapterContent = ({
                       d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                     />
                   </svg>
-                  AI Assistant
+                  {openChatTopics[`${activeChapterIndex}-${tIndex}`] ? "Hide Assistant" : "AI Assistant"}
                 </button>
               </div>
+
+              {/* On-Demand Visual Diagram Agent Panel */}
+              <TopicDiagramPanel
+                courseId={course?.cid}
+                chapterIndex={activeChapterIndex}
+                topicIndex={tIndex}
+                topicTitle={topicData?.topic}
+                topicContent={topicData?.htmlContent}
+              />
 
               {/* html content */}
               <div
                 className="study-content"
                 dangerouslySetInnerHTML={{ __html: topicData?.htmlContent }}
+              />
+
+              {/* Persistent Topic Conversation Agent Panel */}
+              <TopicConversationPanel
+                courseId={course?.cid}
+                chapterIndex={activeChapterIndex}
+                topicIndex={tIndex}
+                topicTitle={topicData?.topic}
+                isOpen={!!openChatTopics[`${activeChapterIndex}-${tIndex}`]}
+                onToggle={() => toggleChatTopic(`${activeChapterIndex}-${tIndex}`)}
               />
 
               {/* mark complete button */}

@@ -12,6 +12,8 @@ import courseRoutes from "./src/routes/course.routes.js";
 import enrollmentRoutes from "./src/routes/enrollment.routes.js";
 import quizRoutes from "./src/routes/quiz.routes.js";
 import userRoutes from "./src/routes/user.route.js";
+import diagramRoutes from "./src/routes/diagram.routes.js";
+import conversationRoutes from "./src/routes/topicConversation.routes.js";
 import errorHandler from "./src/middleware/errorHandler.js";
 import requestLogger from "./src/middleware/requestLogger.js";
 import logger from "./src/lib/logger.js";
@@ -50,6 +52,8 @@ app.use("/api/courses", courseRoutes);
 app.use("/api/enrollments", enrollmentRoutes);
 app.use("/api/quiz", quizRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/diagrams", diagramRoutes);
+app.use("/api/conversations", conversationRoutes);
 
 app.use(errorHandler);
 

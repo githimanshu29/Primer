@@ -91,4 +91,28 @@ export const testApiKeyApi = (data) =>
 export const uploadAvatarApi = (imageData) =>
   axiosInstance.post("/user/upload-avatar", { image: imageData });
 
+// ── TOPIC DIAGRAM AGENT ──────────────────────────────────────
+export const generateTopicDiagramApi = (courseId, chapterIndex, topicIndex, data = {}) =>
+  axiosInstance.post(`/diagrams/${courseId}/chapters/${chapterIndex}/topics/${topicIndex}/generate`, data);
+
+export const getTopicDiagramApi = (courseId, chapterIndex, topicIndex) =>
+  axiosInstance.get(`/diagrams/${courseId}/chapters/${chapterIndex}/topics/${topicIndex}`);
+
+export const deleteTopicDiagramApi = (courseId, chapterIndex, topicIndex) =>
+  axiosInstance.delete(`/diagrams/${courseId}/chapters/${chapterIndex}/topics/${topicIndex}`);
+
+// ── TOPIC CONVERSATION AGENT ─────────────────────────────────
+export const getTopicConversationApi = (courseId, chapterIndex, topicIndex, params = {}) =>
+  axiosInstance.get(`/conversations/${courseId}/chapters/${chapterIndex}/topics/${topicIndex}`, { params });
+
+export const sendTopicMessageApi = (courseId, chapterIndex, topicIndex, data = {}) =>
+  axiosInstance.post(`/conversations/${courseId}/chapters/${chapterIndex}/topics/${topicIndex}/messages`, data);
+
+export const refreshSuggestedQuestionsApi = (courseId, chapterIndex, topicIndex, data = {}) =>
+  axiosInstance.post(`/conversations/${courseId}/chapters/${chapterIndex}/topics/${topicIndex}/suggestions`, data);
+
+export const clearTopicConversationApi = (courseId, chapterIndex, topicIndex) =>
+  axiosInstance.delete(`/conversations/${courseId}/chapters/${chapterIndex}/topics/${topicIndex}`);
+
+
 
