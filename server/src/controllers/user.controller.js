@@ -242,7 +242,7 @@ export const uploadAvatar = async (req, res) => {
 
     // Upload to Cloudinary
     const uploadResult = await uploadToCloudinary(image, {
-      folder: "learnova_avatars",
+      folder: "primer_avatars",
     });
 
     // Update user in MongoDB

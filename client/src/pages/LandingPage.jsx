@@ -511,7 +511,7 @@ const Landing = () => {
                 fontFamily: "'Sora', sans-serif",
               }}
             >
-              Learn<span style={{ color: "#a78bfa" }}>ova</span>
+              Prim<span style={{ color: "#a78bfa" }}>er</span>
             </span>
           </div>
 
@@ -1004,7 +1004,7 @@ const Landing = () => {
               letterSpacing: "-0.8px",
             }}
           >
-            The Future of Learnova
+            The Future of Primer
           </h2>
           <p
             style={{
@@ -1184,7 +1184,7 @@ const Landing = () => {
               fontFamily: "'Sora', sans-serif",
             }}
           >
-            Learn<span style={{ color: "#a78bfa" }}>ova</span>
+            Prim<span style={{ color: "#a78bfa" }}>er</span>
           </span>
         </div>
         <p
@@ -1194,7 +1194,7 @@ const Landing = () => {
             fontFamily: "'DM Sans', sans-serif",
           }}
         >
-          © 2025 Learnova · Built with ❤️ and Gemini AI
+          © 2025 Primer · Built with ❤️ and Gemini AI
         </p>
       </footer>
     </div>

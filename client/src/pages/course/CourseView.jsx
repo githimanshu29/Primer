@@ -281,7 +281,7 @@ const CourseView = () => {
             <span
               style={{ color: "white", fontWeight: "700", fontSize: "16px" }}
             >
-              Learn<span style={{ color: "#a78bfa" }}>ova</span>
+              Prim<span style={{ color: "#a78bfa" }}>er</span>
             </span>
           </div>
 

@@ -228,7 +228,7 @@ const Sidebar = ({ isOpen, onClose, isMobile }) => {
               letterSpacing: "-0.3px",
             }}
           >
-            Learn<span style={{ color: "#a78bfa" }}>ova</span>
+            Prim<span style={{ color: "#a78bfa" }}>er</span>
           </span>
         </div>
 
@@ -481,7 +481,7 @@ const Sidebar = ({ isOpen, onClose, isMobile }) => {
               margin: 0,
             }}
           >
-            © 2025 Course AI
+            © 2025 Primer
           </p>
         </div>
       </div>

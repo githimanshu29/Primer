@@ -35,7 +35,7 @@ export const uploadToCloudinary = async (fileDataUri, options = {}) => {
   const apiSecret = process.env.CLOUDINARY_API_SECRET.trim();
 
   const timestamp = Math.floor(Date.now() / 1000);
-  const folder = options.folder || "learnova_avatars";
+  const folder = options.folder || "primer_avatars";
 
   // Cloudinary signature generation:
   // Sort parameters alphabetically, join with '=', '&', append apiSecret, then SHA-1

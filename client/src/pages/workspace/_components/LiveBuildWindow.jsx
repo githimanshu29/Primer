@@ -6,7 +6,7 @@ const LiveBuildWindow = ({
   isGenerating,
   currentChapter,
   totalChapters,
-  title = "learnova — chapter builder",
+  title = "primer — chapter builder",
   showProgress = true,
 }) => {
   const logsEndRef = useRef(null);

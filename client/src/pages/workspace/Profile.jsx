@@ -19,11 +19,11 @@ import {
 import SkeletonCard from "./_components/SkeletonCard.jsx";
 
 const AVATAR_OPTIONS = [
-  "https://api.dicebear.com/7.x/bottts/svg?seed=learnova1",
-  "https://api.dicebear.com/7.x/bottts/svg?seed=learnova2",
-  "https://api.dicebear.com/7.x/bottts/svg?seed=learnova3",
-  "https://api.dicebear.com/7.x/bottts/svg?seed=learnova4",
-  "https://api.dicebear.com/7.x/bottts/svg?seed=learnova5",
+  "https://api.dicebear.com/7.x/bottts/svg?seed=primer1",
+  "https://api.dicebear.com/7.x/bottts/svg?seed=primer2",
+  "https://api.dicebear.com/7.x/bottts/svg?seed=primer3",
+  "https://api.dicebear.com/7.x/bottts/svg?seed=primer4",
+  "https://api.dicebear.com/7.x/bottts/svg?seed=primer5",
 ];
 
 const Profile = () => {
@@ -831,7 +831,7 @@ const Profile = () => {
             🤖 AI API Keys & Model Management
           </h2>
           <p style={{ color: "#9ca3af", fontSize: "13px", margin: 0, lineHeight: "1.5" }}>
-            Provide your own API keys for unrestricted personal AI generations. If left empty, Learnova uses the system's pooled credentials automatically.
+            Provide your own API keys for unrestricted personal AI generations. If left empty, Primer uses the system's pooled credentials automatically.
           </p>
         </div>
 

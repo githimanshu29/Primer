@@ -736,7 +736,7 @@ const EditCourse = () => {
             isGenerating={isGenerating}
             currentChapter={0}
             totalChapters={course?.courseJson?.chapters?.length || 0}
-            title="learnova — full course builder"
+            title="primer — full course builder"
             showProgress={false}
           />
         </div>

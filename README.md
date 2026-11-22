@@ -1,4 +1,4 @@
-# 🚀 Learnova (Coursera-AI)
+# 🚀 Primer
 
 > **Next-Generation Autonomous AI Course Generation & Interactive Learning Platform**  
 > Powered by Multi-Provider LLMs (Google Gemini & Groq Cloud), LangChain RAG with MongoDB Atlas Vector Search, BullMQ Asynchronous Processing, and Real-Time SSE Streaming.
@@ -40,7 +40,7 @@
 
 ## 💡 Overview
 
-**Learnova** transforms syllabus planning, course creation, and online studying into an intelligent, autonomous pipeline. Rather than generating simple, static markdown, Learnova acts as an AI instructional architect:
+**Primer** transforms syllabus planning, course creation, and online studying into an intelligent, autonomous pipeline. Rather than generating simple, static markdown, Primer acts as an AI instructional architect:
 1. **Interactive Curriculum Structuring**: Generates rich course layouts (chapters, topics, durations) tailored to topic, difficulty level, and user requirements.
 2. **Context-Aware Chapter Synthesis (RAG)**: Uses **LangChain** and **MongoDB Atlas Vector Search** to retain memory of previous chapters, ensuring each new chapter references concepts taught earlier without repetition or hallucination.
 3. **Live Streaming Window (SSE)**: Streams content generation in real-time, showing live terminal logs, step-by-step token generation, and vector indexing progress.
@@ -300,7 +300,7 @@ NODE_ENV=development
 CLIENT_URL=http://localhost:5173
 
 # Database Connection
-MONGO_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/learnova?retryWrites=true&w=majority
+MONGO_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/primer?retryWrites=true&w=majority
 
 # JWT Authentication Secrets
 JWT_ACCESS_SECRET=your_jwt_access_secret_key_min_32_characters
@@ -355,8 +355,8 @@ VITE_API_URL=http://localhost:5005/api
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/githimanshu29/coursera-ai.git
-cd coursera-ai
+git clone https://github.com/githimanshu29/primer.git
+cd primer
 ```
 
 ---
@@ -430,7 +430,7 @@ The frontend application will run on `http://localhost:5173`.
 ## 📂 Project Directory Structure
 
 ```plaintext
-coursera-ai/
+primer/
 ├── client/                               # Frontend React 19 Application
 │   ├── public/                           # Static assets & favicons
 │   ├── src/
@@ -525,7 +525,7 @@ coursera-ai/
 ## ❓ Troubleshooting & FAQs
 
 ### 1. Getting a `404: models/gemini-2.5-flash is no longer available`?
-Google deprecated `gemini-2.5-flash` for new API projects. Learnova uses `gemini-3.5-flash-lite` as the default Gemini model and provides selectable Gemini 3 Flash options (`gemini-3-flash-preview`, `gemini-3.8-flash`, etc.). If testing keys in the Profile page, verify that `gemini-3.5-flash-lite` or another active model is selected.
+Google deprecated `gemini-2.5-flash` for new API projects. Primer uses `gemini-3.5-flash-lite` as the default Gemini model and provides selectable Gemini 3 Flash options (`gemini-3-flash-preview`, `gemini-3.8-flash`, etc.). If testing keys in the Profile page, verify that `gemini-3.5-flash-lite` or another active model is selected.
 
 ### 2. Bull queue jobs are failing or stalling?
 Ensure your Redis instance is running and accessible at `REDIS_HOST:REDIS_PORT`. If using Upstash Redis in production, ensure `NODE_ENV=production` and `UPSTASH_REDIS_URL` is set with the `rediss://` protocol.
